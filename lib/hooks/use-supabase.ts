@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getSupabaseClient } from "@/lib/supabase/client"
-import { clientQueries } from "@/lib/database/queries"
+import { clientQueries } from "@/lib/database/client-queries"
 import type { User } from "@/types/database"
 
 export function useSupabase() {

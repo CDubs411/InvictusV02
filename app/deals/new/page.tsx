@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { clientQueries } from "@/lib/database/queries";
+import { clientQueries } from "@/lib/database/client-queries";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";

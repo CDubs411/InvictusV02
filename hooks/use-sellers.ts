@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { clientQueries } from "@/lib/database/queries";
+import { clientQueries } from "@/lib/database/client-queries";
 import type { Seller as SellerType } from "@/types/database";
 
 export type Seller = SellerType & {
