@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AddSellerPage() {
   const router = useRouter();
