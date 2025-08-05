@@ -337,6 +337,35 @@ export interface Database {
           created_at?: string
         }
       }
+      documents: {
+        Row: {
+          id: string
+          name: string
+          file_url: string
+          file_type: string | null
+          company_id: string
+          created_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          file_url: string
+          file_type?: string | null
+          company_id: string
+          created_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          file_url?: string
+          file_type?: string | null
+          company_id?: string
+          created_by?: string
+          created_at?: string
+        }
+      }
     }
   }
 }
@@ -353,6 +382,7 @@ export type Contract = Database["public"]["Tables"]["contracts"]["Row"]
 export type Call = Database["public"]["Tables"]["calls"]["Row"]
 export type KPI = Database["public"]["Tables"]["kpis"]["Row"]
 export type CalendarEvent = Database["public"]["Tables"]["calendar_events"]["Row"]
+export type Document = Database["public"]["Tables"]["documents"]["Row"]
 
 // Contact union type for calls
 export type Contact = Buyer | Seller | Investor

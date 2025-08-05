@@ -80,6 +80,11 @@ const menuItems = [
     icon: Target,
   },
   {
+    title: "Documents",
+    url: "/documents",
+    icon: File,
+  },
+  {
     title: "Settings",
     url: "/settings",
     icon: Settings,
