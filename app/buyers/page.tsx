@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,70 +11,126 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, Plus, Phone, Mail, MapPin, Handshake, History, UserCheck } from "lucide-react"
+import { getSupabaseClient } from "@/lib/supabase/client"
+import { useAuth } from "@/components/auth-provider"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function BuyersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [buyers, setBuyers] = useState<any[]>([])
+  const [filteredBuyers, setFilteredBuyers] = useState<any[]>([])
 
-  const buyers = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      phone: "(555) 123-4567",
-      email: "sarah.j@email.com",
-      location: "Austin, TX",
-      tags: ["First-Time", "Pre-Approved"],
-      budget: "$250K - $350K",
-      lastContact: "2 days ago",
-      deals: 0,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      phone: "(555) 987-6543",
-      email: "mchen@email.com",
-      location: "Dallas, TX",
-      tags: ["Investor", "Cash Buyer"],
-      budget: "$400K - $600K",
-      lastContact: "1 week ago",
-      deals: 2,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Lisa Rodriguez",
-      phone: "(555) 456-7890",
-      email: "lisa.r@email.com",
-      location: "Houston, TX",
-      tags: ["Relocating", "Urgent"],
-      budget: "$300K - $450K",
-      lastContact: "3 days ago",
-      deals: 1,
-      status: "Hot Lead",
-    },
-    {
-      id: 4,
-      name: "David Wilson",
-      phone: "(555) 321-0987",
-      email: "d.wilson@email.com",
-      location: "San Antonio, TX",
-      tags: ["Repeat Client"],
-      budget: "$200K - $300K",
-      lastContact: "1 day ago",
-      deals: 3,
-      status: "Active",
-    },
-  ]
+  // Form state
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
+  const [location, setLocation] = useState("")
+  const [budget, setBudget] = useState("")
+  const [status, setStatus] = useState("")
+  const [notes, setNotes] = useState("")
 
-  const filteredBuyers = buyers.filter(
-    (buyer) =>
-      buyer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      buyer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      buyer.location.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  const supabase = getSupabaseClient()
+  const { appUser } = useAuth()
+  const { toast } = useToast()
+
+  const fetchBuyers = async () => {
+    if (!appUser) return;
+    const { data, error } = await supabase
+      .from("buyers")
+      .select("*")
+      .eq("company_id", appUser.company_id);
+
+    if (error) {
+      console.error("Error fetching buyers:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch buyers.",
+        variant: "destructive",
+      })
+    } else {
+      setBuyers(data || [])
+    }
+  }
+
+  useEffect(() => {
+    fetchBuyers()
+  }, [appUser])
+
+  useEffect(() => {
+    const filtered = buyers.filter(
+      (buyer) =>
+        buyer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (buyer.email && buyer.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (buyer.address && buyer.address.toLowerCase().includes(searchTerm.toLowerCase())),
+    )
+    setFilteredBuyers(filtered)
+  }, [searchTerm, buyers])
+
+  const handleAddBuyer = async () => {
+    if (!appUser) {
+        toast({
+            title: "Authentication Error",
+            description: "You must be logged in to add a buyer.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    const name = `${firstName} ${lastName}`.trim()
+    if (!name) {
+        toast({
+            title: "Validation Error",
+            description: "Please enter a name.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    const combinedNotes = `Budget: ${budget}\nStatus: ${status}\n\n${notes}`;
+
+    const { error } = await supabase.from("buyers").insert([
+      {
+        name,
+        phone,
+        email,
+        address: location,
+        notes: combinedNotes,
+        company_id: appUser.company_id,
+        created_by: appUser.id,
+      },
+    ]);
+
+    if (error) {
+      console.error("Error adding buyer:", error)
+      toast({
+        title: "Error",
+        description: "Failed to add buyer.",
+        variant: "destructive",
+      })
+    } else {
+      toast({
+        title: "Success",
+        description: "Buyer added successfully.",
+      })
+      setIsAddDialogOpen(false)
+      fetchBuyers() // Refetch buyers to update the list
+      // Reset form fields
+      setFirstName("")
+      setLastName("")
+      setPhone("")
+      setEmail("")
+      setLocation("")
+      setBudget("")
+      setStatus("")
+      setNotes("")
+    }
+  }
 
   const getStatusColor = (status: string) => {
+    // This is based on hardcoded data, which is no longer used.
+    // I will keep the function but it will not be used until the status is fetched from the database.
     switch (status) {
       case "Hot Lead":
         return "bg-alert text-white"
@@ -111,32 +167,32 @@ export default function BuyersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="John" />
+                  <Input id="firstName" placeholder="John" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
                 </div>
                 <div>
                   <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Doe" />
+                  <Input id="lastName" placeholder="Doe" value={lastName} onChange={(e) => setLastName(e.target.value)} />
                 </div>
               </div>
               <div>
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="(555) 123-4567" />
+                <Input id="phone" placeholder="(555) 123-4567" value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@email.com" />
+                <Input id="email" type="email" placeholder="john@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="City, State" />
+                <Input id="location" placeholder="City, State" value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="budget">Budget Range</Label>
-                <Input id="budget" placeholder="$200K - $300K" />
+                <Input id="budget" placeholder="$200K - $300K" value={budget} onChange={(e) => setBudget(e.target.value)} />
               </div>
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select>
+                <Select onValueChange={setStatus} value={status}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -149,12 +205,12 @@ export default function BuyersPage() {
               </div>
               <div>
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea id="notes" placeholder="Additional notes..." />
+                <Textarea id="notes" placeholder="Additional notes..." value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
               <div className="flex gap-2 pt-4">
                 <Button
                   className="flex-1 bg-cta-blue hover:bg-primary-blue text-white"
-                  onClick={() => setIsAddDialogOpen(false)}
+                  onClick={handleAddBuyer}
                 >
                   Add Buyer
                 </Button>
@@ -213,7 +269,8 @@ export default function BuyersPage() {
                   <TableCell>
                     <div>
                       <div className="font-medium text-gray-custom">{buyer.name}</div>
-                      <div className="text-sm text-gray-400">{buyer.deals} deals</div>
+                      {/* The deals count is not available in the buyers table, so I'm removing it for now */}
+                      {/* <div className="text-sm text-gray-400">{buyer.deals} deals</div> */}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -231,26 +288,21 @@ export default function BuyersPage() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-gray-400" />
-                      {buyer.location}
+                      {buyer.address}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium text-gray-custom">{buyer.budget}</span>
+                    {/* Budget, tags, status, last contact are not in the db. I'll remove them from the table for now. */}
+                    <span className="font-medium text-gray-custom"></span>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {buyer.tags.map((tag, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(buyer.status)}>{buyer.status}</Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm text-gray-400">{buyer.lastContact}</span>
+                    <span className="text-sm text-gray-400"></span>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
