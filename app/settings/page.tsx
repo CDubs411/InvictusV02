@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SettingsIcon, Users, Building2, Calculator, Plus, Edit, Trash2, User, Mail, Shield, Save } from "lucide-react"
+import { SettingsIcon, Users, Building2, Plus, Edit, Trash2, User, Mail, Shield, Save } from "lucide-react"
 
 export default function SettingsPage() {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
@@ -66,15 +66,6 @@ export default function SettingsPage() {
     website: "www.invictusre.com",
   }
 
-  // Sample quote variables
-  const [quoteVariables, setQuoteVariables] = useState({
-    labor_rate: 75,
-    material_markup: 15,
-    default_profit_margin: 20,
-    overhead_percentage: 10,
-    tax_rate: 8.25,
-  })
-
   const getRoleColor = (role: string) => {
     switch (role) {
       case "admin":
@@ -111,7 +102,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-accent-blue">
+        <TabsList className="grid w-full grid-cols-2 bg-accent-blue">
           <TabsTrigger value="users" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue">
             <Users className="w-4 h-4 mr-2" />
             Users
@@ -119,10 +110,6 @@ export default function SettingsPage() {
           <TabsTrigger value="company" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue">
             <Building2 className="w-4 h-4 mr-2" />
             Company
-          </TabsTrigger>
-          <TabsTrigger value="quotes" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue">
-            <Calculator className="w-4 h-4 mr-2" />
-            Quote Variables
           </TabsTrigger>
         </TabsList>
 
@@ -281,125 +268,6 @@ export default function SettingsPage() {
                 <Button className="bg-cta-blue hover:bg-primary-blue text-white">
                   <Save className="w-4 h-4 mr-2" />
                   Save Changes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Quote Variables Tab */}
-        <TabsContent value="quotes" className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-custom">Quote Variables</h2>
-
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-custom">Default Quote Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="laborRate">Labor Rate ($/hour)</Label>
-                  <Input
-                    id="laborRate"
-                    type="number"
-                    value={quoteVariables.labor_rate}
-                    onChange={(e) => setQuoteVariables({ ...quoteVariables, labor_rate: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="materialMarkup">Material Markup (%)</Label>
-                  <Input
-                    id="materialMarkup"
-                    type="number"
-                    value={quoteVariables.material_markup}
-                    onChange={(e) => setQuoteVariables({ ...quoteVariables, material_markup: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="profitMargin">Default Profit Margin (%)</Label>
-                  <Input
-                    id="profitMargin"
-                    type="number"
-                    value={quoteVariables.default_profit_margin}
-                    onChange={(e) =>
-                      setQuoteVariables({ ...quoteVariables, default_profit_margin: Number(e.target.value) })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="overhead">Overhead Percentage (%)</Label>
-                  <Input
-                    id="overhead"
-                    type="number"
-                    value={quoteVariables.overhead_percentage}
-                    onChange={(e) =>
-                      setQuoteVariables({ ...quoteVariables, overhead_percentage: Number(e.target.value) })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="taxRate">Tax Rate (%)</Label>
-                  <Input
-                    id="taxRate"
-                    type="number"
-                    step="0.01"
-                    value={quoteVariables.tax_rate}
-                    onChange={(e) => setQuoteVariables({ ...quoteVariables, tax_rate: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
-
-              {/* Quote Preview */}
-              <Card className="bg-accent-blue border-primary-blue mt-6">
-                <CardHeader>
-                  <CardTitle className="text-sm text-primary-blue">Quote Preview (Sample $100,000 project)</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Base Cost:</span>
-                    <span>$100,000</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Labor (400 hrs × ${quoteVariables.labor_rate}):</span>
-                    <span>${(400 * quoteVariables.labor_rate).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Material Markup ({quoteVariables.material_markup}%):</span>
-                    <span>${(100000 * (quoteVariables.material_markup / 100)).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Overhead ({quoteVariables.overhead_percentage}%):</span>
-                    <span>${(100000 * (quoteVariables.overhead_percentage / 100)).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Profit Margin ({quoteVariables.default_profit_margin}%):</span>
-                    <span>${(100000 * (quoteVariables.default_profit_margin / 100)).toLocaleString()}</span>
-                  </div>
-                  <hr className="border-primary-blue" />
-                  <div className="flex justify-between font-bold text-primary-blue">
-                    <span>Total Quote:</span>
-                    <span>
-                      $
-                      {(
-                        100000 +
-                        400 * quoteVariables.labor_rate +
-                        100000 * (quoteVariables.material_markup / 100) +
-                        100000 * (quoteVariables.overhead_percentage / 100) +
-                        100000 * (quoteVariables.default_profit_margin / 100)
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="flex justify-end pt-4">
-                <Button className="bg-cta-blue hover:bg-primary-blue text-white">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Variables
                 </Button>
               </div>
             </CardContent>
