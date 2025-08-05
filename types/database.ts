@@ -1,3 +1,11 @@
+export type QuoteSettings = {
+  labor_rate: number
+  material_markup: number
+  default_profit_margin: number
+  overhead_percentage: number
+  tax_rate: number
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -6,16 +14,19 @@ export interface Database {
           id: string
           name: string
           created_at: string
+          quote_settings: QuoteSettings
         }
         Insert: {
           id?: string
           name: string
           created_at?: string
+          quote_settings?: QuoteSettings
         }
         Update: {
           id?: string
           name?: string
           created_at?: string
+          quote_settings?: QuoteSettings
         }
       }
       users: {

@@ -418,6 +418,51 @@ export class ClientQueries {
     if (error) throw error
     return data
   }
+
+  async getCompany(companyId: string) {
+    if (!hasSupabaseConfig()) {
+      console.log("Mock: Getting company", companyId)
+      return {
+        id: companyId,
+        name: "Invictus Real Estate",
+        address: "123 Business Plaza, Austin, TX 78701",
+        phone: "(555) 123-4567",
+        email: "info@invictusre.com",
+        website: "www.invictusre.com",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        quote_settings: {
+          labor_rate: 75,
+          material_markup: 15,
+          default_profit_margin: 20,
+          overhead_percentage: 10,
+          tax_rate: 8.25,
+        },
+      }
+    }
+
+    const { data, error } = await this.supabase.from("companies").select("*").eq("id", companyId).single()
+
+    if (error) throw error
+    return data
+  }
+
+  async updateCompanyQuoteSettings(companyId: string, settings: any) {
+    if (!hasSupabaseConfig()) {
+      console.log("Mock: Updating company quote settings", companyId, settings)
+      return { id: companyId, quote_settings: settings }
+    }
+
+    const { data, error } = await this.supabase
+      .from("companies")
+      .update({ quote_settings: settings })
+      .eq("id", companyId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
 }
 
 // Export instances
