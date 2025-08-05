@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 35.3%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 35.3%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 35.3%;
+    --primary: 201 100% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 201 100% 95%;
+    --secondary-foreground: 0 0% 35.3%;
+    --muted: 201 100% 95%;
+    --muted-foreground: 0 0% 35.3%;
+    --accent: 201 100% 95%;
+    --accent-foreground: 0 0% 35.3%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 201 100% 39%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 35.3%;
+    --sidebar-primary: 201 100% 39%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 201 100% 95%;
+    --sidebar-accent-foreground: 0 0% 35.3%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 201 100% 39%;
+  }
+}
+
+/* Custom colors for Invictus CRM */
+.bg-primary-blue {
+  background-color: #0077c8;
+}
+.bg-accent-blue {
+  background-color: #e5f4fb;
+}
+.bg-cta-blue {
+  background-color: #3399ff;
+}
+.text-gray-custom {
+  color: #5a5a5a;
+}
+.bg-success {
+  background-color: #3bb273;
+}
+.bg-alert {
+  background-color: #d9534f;
+}
+
+.text-primary-blue {
+  color: #0077c8;
+}
+.text-cta-blue {
+  color: #3399ff;
+}
+.text-success {
+  color: #3bb273;
+}
+.text-alert {
+  color: #d9534f;
+}
+
+.border-primary-blue {
+  border-color: #0077c8;
+}
+.border-accent-blue {
+  border-color: #e5f4fb;
+}
+
+.hover\:bg-primary-blue:hover {
+  background-color: #0077c8;
+}
+.hover\:bg-cta-blue:hover {
+  background-color: #3399ff;
+}
