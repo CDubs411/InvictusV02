@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Link from "next/link"
 import {
   Search,
   Filter,
@@ -26,7 +23,6 @@ import {
 
 export default function InvestorsPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   const investors = [
     {
@@ -144,73 +140,12 @@ export default function InvestorsPage() {
           </Badge>
         </div>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-cta-blue hover:bg-primary-blue text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Investor
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Investor</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="companyName">Company/Individual Name</Label>
-                <Input id="companyName" placeholder="ABC Investments LLC" />
-              </div>
-              <div>
-                <Label htmlFor="contactName">Contact Person</Label>
-                <Input id="contactName" placeholder="John Smith" />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="(555) 123-4567" />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john@abcinvestments.com" />
-              </div>
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="City, State" />
-              </div>
-              <div>
-                <Label htmlFor="investmentRange">Investment Range</Label>
-                <Input id="investmentRange" placeholder="$200K - $500K" />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea id="notes" placeholder="Investment preferences, deal criteria..." />
-              </div>
-              <div className="flex gap-2 pt-4">
-                <Button
-                  className="flex-1 bg-cta-blue hover:bg-primary-blue text-white"
-                  onClick={() => setIsAddDialogOpen(false)}
-                >
-                  Add Investor
-                </Button>
-                <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Link href="/investors/new">
+          <Button className="bg-cta-blue hover:bg-primary-blue text-white">
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Investor
+          </Button>
+        </Link>
       </div>
 
       {/* Investor Stats */}
