@@ -48,6 +48,22 @@ export class ClientQueries {
     return data
   }
 
+  async createKPI(kpi: Tables["kpis"]["Insert"]) {
+    if (!hasSupabaseConfig()) {
+      console.log("Mock: Creating KPI", kpi)
+      return {
+        ...kpi,
+        id: Date.now().toString(),
+        created_at: new Date().toISOString(),
+      }
+    }
+
+    const { data, error } = await this.supabase.from("kpis").insert(kpi).select().single()
+
+    if (error) throw error
+    return data
+  }
+
   async createBuyer(buyer: Tables["buyers"]["Insert"]) {
     if (!hasSupabaseConfig()) {
       console.log("Mock: Creating buyer", buyer)
