@@ -390,7 +390,7 @@ export class ClientQueries {
           email: "brendan@invictusre.com",
           role: "closer" as const,
           company_id: "1",
-          avatar__url: null,
+          avatar_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
