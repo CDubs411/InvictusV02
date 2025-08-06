@@ -141,6 +141,39 @@ export default function BuyersPage() {
     }
   }
 
+  const [isCalling, setIsCalling] = useState<string | null>(null)
+
+  const handleCall = async (buyerId: string) => {
+    setIsCalling(buyerId)
+    try {
+      const response = await fetch("/api/calls", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ contactId: buyerId, contactType: "buyer" }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to initiate call")
+      }
+
+      toast({
+        title: "Success",
+        description: "Call initiated successfully.",
+      })
+    } catch (error) {
+      console.error("Error initiating call:", error)
+      toast({
+        title: "Error",
+        description: "Failed to initiate call. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCalling(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -310,9 +343,11 @@ export default function BuyersPage() {
                         size="sm"
                         variant="outline"
                         className="border-primary-blue text-primary-blue bg-transparent"
+                        onClick={() => handleCall(buyer.id)}
+                        disabled={isCalling === buyer.id}
                       >
                         <Phone className="w-3 h-3 mr-1" />
-                        Call
+                        {isCalling === buyer.id ? "Calling..." : "Call"}
                       </Button>
                       <Button size="sm" variant="outline" className="border-success text-success bg-transparent">
                         <Handshake className="w-3 h-3 mr-1" />
