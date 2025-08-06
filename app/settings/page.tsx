@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SettingsIcon, Users, Building2, Plus, Edit, Trash2, User, Mail, Shield, Save } from "lucide-react"
+import { SettingsIcon, Users, Building2, Plus, Edit, Trash2, User, Mail, Shield, Save, Bug } from "lucide-react"
+import { DebugMenu } from "@/components/ui/debug-menu"
 
 export default function SettingsPage() {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
@@ -102,7 +103,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 bg-accent-blue">
+        <TabsList className="grid w-full grid-cols-3 bg-accent-blue">
           <TabsTrigger value="users" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue">
             <Users className="w-4 h-4 mr-2" />
             Users
@@ -110,6 +111,10 @@ export default function SettingsPage() {
           <TabsTrigger value="company" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue">
             <Building2 className="w-4 h-4 mr-2" />
             Company
+          </TabsTrigger>
+          <TabsTrigger value="debug" className="data-[state=active]:bg-white data-[state=active]:text-primary-blue">
+            <Bug className="w-4 h-4 mr-2" />
+            Debug
           </TabsTrigger>
         </TabsList>
 
@@ -272,6 +277,11 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Debug Tab */}
+        <TabsContent value="debug">
+          <DebugMenu />
         </TabsContent>
       </Tabs>
     </div>
