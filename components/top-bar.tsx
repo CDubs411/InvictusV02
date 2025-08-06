@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { PreferencesDialog } from "./preferences-dialog"
 
 export function TopBar() {
   return (
@@ -49,6 +50,9 @@ export function TopBar() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <PreferencesDialog />
+            </DropdownMenuItem>
             <DropdownMenuItem>Sign Out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
