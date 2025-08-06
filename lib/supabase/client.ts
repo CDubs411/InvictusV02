@@ -33,3 +33,17 @@ export const getSupabaseClient = () => {
   }
   return supabaseClient
 }
+
+export const reinitializeSupabaseClient = (url: string, key: string) => {
+  // Update the environment variables for the current session
+  process.env.NEXT_PUBLIC_SUPABASE_URL = url
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = key
+
+  // Create a new client with the updated credentials
+  supabaseClient = createClientComponentClient<Database>({
+    supabaseUrl: url,
+    supabaseKey: key,
+  })
+
+  return supabaseClient
+}

@@ -315,6 +315,10 @@ export interface Database {
           user_id: string
           type: "quote" | "follow-up" | "meeting" | "call" | null
           created_at: string
+          location: string | null
+          description: string | null
+          contact_id: string | null
+          contact_type: "buyer" | "seller" | "investor" | null
         }
         Insert: {
           id?: string
@@ -325,6 +329,10 @@ export interface Database {
           user_id: string
           type?: "quote" | "follow-up" | "meeting" | "call" | null
           created_at?: string
+          location?: string | null
+          description?: string | null
+          contact_id?: string | null
+          contact_type?: "buyer" | "seller" | "investor" | null
         }
         Update: {
           id?: string
@@ -335,6 +343,10 @@ export interface Database {
           user_id?: string
           type?: "quote" | "follow-up" | "meeting" | "call" | null
           created_at?: string
+          location?: string | null
+          description?: string | null
+          contact_id?: string | null
+          contact_type?: "buyer" | "seller" | "investor" | null
         }
       }
       documents: {

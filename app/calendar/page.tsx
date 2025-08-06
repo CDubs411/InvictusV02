@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,74 +10,139 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CalendarIcon, Plus, Clock, User, MapPin, Phone, FileText, ChevronLeft, ChevronRight } from "lucide-react"
+import { clientQueries } from "@/lib/database/queries"
+import { CalendarEvent, Contact, User as UserType, Buyer, Seller, Investor, ContactType } from "@/types/database"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useToast } from "@/hooks/use-toast"
+
+type EnrichedCalendarEvent = CalendarEvent & {
+  user_name: string
+  contact_name: string
+}
+
+const initialFormState = {
+  title: "",
+  type: "",
+  startDate: "",
+  startTime: "",
+  endDate: "",
+  endTime: "",
+  contactId: "",
+  location: "",
+  description: "",
+}
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<"week" | "agenda">("agenda")
   const [isAddEventOpen, setIsAddEventOpen] = useState(false)
+  const [events, setEvents] = useState<EnrichedCalendarEvent[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [users, setUsers] = useState<UserType[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [currentUser, setCurrentUser] = useState<UserType | null>(null)
+  const [newEvent, setNewEvent] = useState(initialFormState)
+  const { toast } = useToast()
 
-  // Sample calendar events based on database schema
-  const events = [
-    {
-      id: "550e8400-e29b-41d4-a716-446655440090",
-      title: "Property Walkthrough",
-      start_time: "2024-01-16T14:00:00Z",
-      end_time: "2024-01-16T15:00:00Z",
-      company_id: "550e8400-e29b-41d4-a716-446655440000",
-      user_id: "550e8400-e29b-41d4-a716-446655440001",
-      type: "meeting",
-      created_at: "2024-01-15T10:00:00Z",
-      // Additional display data
-      user_name: "Brendan Martinez",
-      contact_name: "Sarah Johnson",
-      location: "123 Oak Street, Austin, TX",
-      description: "Initial property walkthrough with potential buyer",
-    },
-    {
-      id: "550e8400-e29b-41d4-a716-446655440091",
-      title: "Contract Review",
-      start_time: "2024-01-16T16:30:00Z",
-      end_time: "2024-01-16T17:00:00Z",
-      company_id: "550e8400-e29b-41d4-a716-446655440000",
-      user_id: "550e8400-e29b-41d4-a716-446655440002",
-      type: "call",
-      created_at: "2024-01-15T11:00:00Z",
-      user_name: "Sarah Johnson",
-      contact_name: "Premier Properties LLC",
-      location: "Phone Call",
-      description: "Review contract terms and conditions",
-    },
-    {
-      id: "550e8400-e29b-41d4-a716-446655440092",
-      title: "Follow-up Call",
-      start_time: "2024-01-17T09:00:00Z",
-      end_time: "2024-01-17T09:30:00Z",
-      company_id: "550e8400-e29b-41d4-a716-446655440000",
-      user_id: "550e8400-e29b-41d4-a716-446655440001",
-      type: "follow-up",
-      created_at: "2024-01-15T12:00:00Z",
-      user_name: "Brendan Martinez",
-      contact_name: "Lisa Rodriguez",
-      location: "Phone Call",
-      description: "Follow up on quote discussion",
-    },
-    {
-      id: "550e8400-e29b-41d4-a716-446655440093",
-      title: "Quote Presentation",
-      start_time: "2024-01-17T14:00:00Z",
-      end_time: "2024-01-17T15:30:00Z",
-      company_id: "550e8400-e29b-41d4-a716-446655440000",
-      user_id: "550e8400-e29b-41d4-a716-446655440003",
-      type: "quote",
-      created_at: "2024-01-15T13:00:00Z",
-      user_name: "Mike Chen",
-      contact_name: "Capital Growth Partners",
-      location: "Office Meeting Room",
-      description: "Present detailed quote for multi-property deal",
-    },
-  ]
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const [eventsData, usersData, buyersData, sellersData, investorsData, userData] = await Promise.all([
+        clientQueries.getCalendarEvents(),
+        clientQueries.getCompanyUsers(),
+        clientQueries.getBuyers(),
+        clientQueries.getSellers(),
+        clientQueries.getInvestors(),
+        clientQueries.getCurrentUser(),
+      ])
 
-  const getEventTypeColor = (type: string) => {
+      const allContacts: Contact[] = [...(buyersData as Buyer[]), ...(sellersData as Seller[]), ...(investorsData as Investor[])]
+      setContacts(allContacts)
+      setUsers(usersData)
+      setCurrentUser(userData as UserType)
+
+      const userMap = new Map(usersData.map((u) => [u.id, u.name]))
+      const contactMap = new Map(allContacts.map((c) => [c.id, c.name]))
+
+      const enrichedEvents = (eventsData as CalendarEvent[]).map((event) => ({
+        ...event,
+        user_name: event.user_id ? userMap.get(event.user_id) || "Unknown User" : "Unknown User",
+        contact_name: event.contact_id ? contactMap.get(event.contact_id) || "Unknown Contact" : "No Contact",
+      }))
+
+      setEvents(enrichedEvents)
+    } catch (error) {
+      console.error("Failed to fetch calendar data:", error)
+      toast({
+        title: "Error fetching data",
+        description: "Could not load calendar data. Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target
+    setNewEvent((prev) => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (id: string, value: string) => {
+    setNewEvent((prev) => ({ ...prev, [id]: value }))
+  }
+
+  const handleCreateEvent = async () => {
+    if (!currentUser) {
+      toast({ title: "Error", description: "You must be logged in to create an event.", variant: "destructive" })
+      return
+    }
+
+    const { title, type, startDate, startTime, endDate, endTime, contactId, location, description } = newEvent
+    if (!title || !type || !startDate || !startTime || !endDate || !endTime) {
+      toast({ title: "Missing Fields", description: "Please fill out all required fields.", variant: "destructive" })
+      return
+    }
+
+    const start_time = new Date(`${startDate}T${startTime}`).toISOString()
+    const end_time = new Date(`${endDate}T${endTime}`).toISOString()
+
+    const selectedContact = contacts.find((c) => c.id === contactId)
+    let contact_type: ContactType | null = null
+    if (selectedContact) {
+      if ("budget_min" in selectedContact) contact_type = "buyer"
+      else if ("notes" in selectedContact && !("budget_min" in selectedContact)) contact_type = "seller"
+      else contact_type = "investor"
+    }
+
+    try {
+      await clientQueries.createCalendarEvent({
+        title,
+        type: type as CalendarEvent["type"],
+        start_time,
+        end_time,
+        company_id: currentUser.company_id,
+        user_id: currentUser.id,
+        contact_id: contactId || null,
+        contact_type,
+        location,
+        description,
+      })
+      toast({ title: "Success", description: "Event created successfully." })
+      setIsAddEventOpen(false)
+      setNewEvent(initialFormState)
+      fetchData() // Refresh data
+    } catch (error) {
+      console.error("Failed to create event:", error)
+      toast({ title: "Error", description: "Failed to create event. Please try again.", variant: "destructive" })
+    }
+  }
+
+  const getEventTypeColor = (type: string | null) => {
     switch (type) {
       case "meeting":
         return "bg-primary-blue text-white"
@@ -92,7 +157,7 @@ export default function CalendarPage() {
     }
   }
 
-  const getEventTypeIcon = (type: string) => {
+  const getEventTypeIcon = (type: string | null) => {
     switch (type) {
       case "meeting":
         return <User className="w-3 h-3" />
@@ -124,21 +189,85 @@ export default function CalendarPage() {
     })
   }
 
-  const todayEvents = events.filter((event) => {
-    const eventDate = new Date(event.start_time).toDateString()
-    const today = new Date().toDateString()
-    return eventDate === today
-  })
+  const todayEvents = useMemo(
+    () =>
+      events.filter((event) => {
+        const eventDate = new Date(event.start_time).toDateString()
+        const today = new Date().toDateString()
+        return eventDate === today
+      }),
+    [events]
+  )
 
-  const upcomingEvents = events
-    .filter((event) => {
-      const eventDate = new Date(event.start_time)
-      const today = new Date()
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      return eventDate >= tomorrow
+  const upcomingEvents = useMemo(
+    () =>
+      events
+        .filter((event) => {
+          const eventDate = new Date(event.start_time)
+          const today = new Date()
+          return eventDate > today
+        })
+        .slice(0, 5),
+    [events]
+  )
+
+  const startOfWeek = useMemo(() => {
+    const date = new Date(currentDate)
+    const day = date.getDay()
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+    return new Date(date.setDate(diff))
+  }, [currentDate])
+
+  const weekDays = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const date = new Date(startOfWeek)
+      date.setDate(date.getDate() + i)
+      return date
     })
-    .slice(0, 5)
+  }, [startOfWeek])
+
+  const eventsByDay = useMemo(() => {
+    const grouped: { [key: string]: EnrichedCalendarEvent[] } = {}
+    weekDays.forEach((day) => {
+      grouped[day.toDateString()] = events.filter((event) => {
+        const eventDate = new Date(event.start_time)
+        return eventDate.toDateString() === day.toDateString()
+      })
+    })
+    return grouped
+  }, [events, weekDays])
+
+  const handlePrevWeek = () => {
+    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 7)))
+  }
+
+  const handleNextWeek = () => {
+    setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 7)))
+  }
+
+  const handleToday = () => {
+    setCurrentDate(new Date())
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <Skeleton className="h-24 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -181,11 +310,11 @@ export default function CalendarPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="title">Event Title</Label>
-                  <Input id="title" placeholder="Property walkthrough..." />
+                  <Input id="title" value={newEvent.title} onChange={handleInputChange} placeholder="Property walkthrough..." />
                 </div>
                 <div>
                   <Label htmlFor="type">Event Type</Label>
-                  <Select>
+                  <Select value={newEvent.type} onValueChange={(value) => handleSelectChange("type", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -200,48 +329,50 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="startDate">Start Date</Label>
-                    <Input id="startDate" type="date" />
+                    <Input id="startDate" type="date" value={newEvent.startDate} onChange={handleInputChange} />
                   </div>
                   <div>
                     <Label htmlFor="startTime">Start Time</Label>
-                    <Input id="startTime" type="time" />
+                    <Input id="startTime" type="time" value={newEvent.startTime} onChange={handleInputChange} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="endDate">End Date</Label>
-                    <Input id="endDate" type="date" />
+                    <Input id="endDate" type="date" value={newEvent.endDate} onChange={handleInputChange} />
                   </div>
                   <div>
                     <Label htmlFor="endTime">End Time</Label>
-                    <Input id="endTime" type="time" />
+                    <Input id="endTime" type="time" value={newEvent.endTime} onChange={handleInputChange} />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="contact">Contact</Label>
-                  <Select>
+                  <Label htmlFor="contactId">Contact</Label>
+                  <Select value={newEvent.contactId} onValueChange={(value) => handleSelectChange("contactId", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select contact" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                      <SelectItem value="mike">Mike Chen</SelectItem>
-                      <SelectItem value="lisa">Lisa Rodriguez</SelectItem>
+                      {contacts.map((contact) => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label htmlFor="location">Location</Label>
-                  <Input id="location" placeholder="Office, property address, or 'Phone Call'" />
+                  <Input id="location" value={newEvent.location} onChange={handleInputChange} placeholder="Office, property address, or 'Phone Call'" />
                 </div>
                 <div>
                   <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" placeholder="Event details..." />
+                  <Textarea id="description" value={newEvent.description} onChange={handleInputChange} placeholder="Event details..." />
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button
                     className="flex-1 bg-cta-blue hover:bg-primary-blue text-white"
-                    onClick={() => setIsAddEventOpen(false)}
+                    onClick={handleCreateEvent}
                   >
                     Create Event
                   </Button>
@@ -260,17 +391,27 @@ export default function CalendarPage() {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="icon" className="border-primary-blue text-primary-blue bg-transparent">
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-primary-blue text-primary-blue bg-transparent"
+                onClick={handlePrevWeek}
+              >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <h2 className="text-xl font-semibold text-gray-custom">
                 {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
               </h2>
-              <Button variant="outline" size="icon" className="border-primary-blue text-primary-blue bg-transparent">
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-primary-blue text-primary-blue bg-transparent"
+                onClick={handleNextWeek}
+              >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-            <Button variant="outline" className="border-primary-blue text-primary-blue bg-transparent">
+            <Button variant="outline" className="border-primary-blue text-primary-blue bg-transparent" onClick={handleToday}>
               Today
             </Button>
           </div>
@@ -365,69 +506,29 @@ export default function CalendarPage() {
 
       {viewMode === "week" && (
         <Card className="border border-gray-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-gray-custom">Week View</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-12">
-              <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-custom mb-2">Week View</h3>
-              <p className="text-gray-400">Weekly calendar view coming soon...</p>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-7">
+              {weekDays.map((day) => (
+                <div key={day.toISOString()} className="border-r border-gray-200 p-2 min-h-[200px]">
+                  <div className="text-center font-semibold">{day.toLocaleDateString("en-US", { weekday: "short" })}</div>
+                  <div className="text-center text-gray-500 mb-2">{day.getDate()}</div>
+                  <div className="space-y-2">
+                    {eventsByDay[day.toDateString()]?.map((event) => (
+                      <div key={event.id} className="p-2 rounded-lg" style={{ backgroundColor: getEventTypeColor(event.type) }}>
+                        <div className="font-bold text-white text-xs">{event.title}</div>
+                        <div className="text-white text-xs opacity-90">{formatTime(event.start_time)}</div>
+                        <div className="text-white text-xs opacity-90 flex items-center gap-1">
+                          <User className="w-3 h-3" /> {event.contact_name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Event Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-custom">Total Events</CardTitle>
-            <CalendarIcon className="h-4 w-4 text-primary-blue" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-custom">{events.length}</div>
-            <div className="text-xs text-gray-400">This month</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-custom">Meetings</CardTitle>
-            <User className="h-4 w-4 text-primary-blue" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-custom">
-              {events.filter((e) => e.type === "meeting").length}
-            </div>
-            <div className="text-xs text-gray-400">In-person meetings</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-custom">Calls</CardTitle>
-            <Phone className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-custom">
-              {events.filter((e) => e.type === "call" || e.type === "follow-up").length}
-            </div>
-            <div className="text-xs text-gray-400">Phone calls scheduled</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-custom">Quote Presentations</CardTitle>
-            <FileText className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-custom">{events.filter((e) => e.type === "quote").length}</div>
-            <div className="text-xs text-gray-400">Quote meetings</div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   )
 }
