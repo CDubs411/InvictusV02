@@ -467,3 +467,31 @@ export class ClientQueries {
 
 // Export instances
 export const clientQueries = new ClientQueries()
+
+// Server-side queries (for use in API routes and server actions)
+import { createRouteClient } from "@/lib/supabase/server"
+
+export class ServerQueries {
+  private supabase = createRouteClient()
+
+  async getContactPhoneNumber(
+    contactId: string,
+    contactType: "buyer" | "seller" | "investor",
+  ) {
+    const tableName = `${contactType}s` as "buyers" | "sellers" | "investors"
+    const { data, error } = await this.supabase
+      .from(tableName)
+      .select("phone")
+      .eq("id", contactId)
+      .single()
+
+    if (error) {
+      console.error(`Error fetching phone number for ${contactType} ${contactId}:`, error)
+      return null
+    }
+
+    return data.phone
+  }
+}
+
+export const serverQueries = new ServerQueries()
